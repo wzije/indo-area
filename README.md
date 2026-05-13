@@ -8,10 +8,10 @@ This package is designed to support modern Laravel ecosystems and supports the f
 
 | Laravel Version  | PHP Version | Status    |
 | :--------------- | :---------- | :-------- |
-| **Laravel 10.x** | `^8.2`      | Supported |
-| **Laravel 11.x** | `^8.2`      | Supported |
-| **Laravel 12.x** | `^8.2`      | Supported |
-| **Laravel 13.x** | `^8.2`      | Supported |
+| **Laravel 10.x** | `^8.3`      | Supported |
+| **Laravel 11.x** | `^8.3`      | Supported |
+| **Laravel 12.x** | `^8.3`      | Supported |
+| **Laravel 13.x** | `^8.3`      | Supported |
 
 ## Features
 
@@ -26,8 +26,6 @@ You can easily install this package into any Laravel project via Composer:
 ```bash
 composer require wzije/indo-area
 ```
-
-_(Note: Ensure your package is published on Packagist.org and you have tagged a release version such as `v1.0.0` in your GitHub repository)._
 
 ## Usage Guide
 
@@ -46,8 +44,8 @@ use Wzije\IndoArea\Models\Province;
 ```php
 use Wzije\IndoArea\Models\Province;
 
-\(province = Province::find(\)provinceId);
-\(cities =\)province->cities;
+province = Province::find(provinceId);
+cities = province->cities;
 ```
 
 ### 3. Fetch Subdistricts and Chained Relationships
@@ -55,10 +53,10 @@ use Wzije\IndoArea\Models\Province;
 ```php
 use Wzije\IndoArea\Models\City;
 
-\(city = City::find(\)cityId);
+city = City::find(cityId);
 
 // Retrieve all subdistricts under this city along with their respective villages
-\(subdistricts =\)city->subdistricts()->with('villages')->get();
+subdistricts = city->subdistricts()->with('villages')->get();
 ```
 
 ## Available Models
