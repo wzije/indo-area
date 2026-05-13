@@ -10,7 +10,7 @@ class IndoAreaServiceProvider extends ServiceProvider
 {
 
 
-    public function register()
+    public function register(): void
     {
         $databasePath = __DIR__ . '/../database/records.sqlite';
         Config::set([
@@ -23,7 +23,7 @@ class IndoAreaServiceProvider extends ServiceProvider
         ]);
     }
 
-    public function boot(Closure $callback)
+    public function boot(): void
     {
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
     }
