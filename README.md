@@ -2,6 +2,17 @@
 
 IndoArea is a self-contained Laravel package providing comprehensive Indonesian regional administrative data (BPS standard). It utilizes an internal offline SQLite database, making it exceptionally fast, lightweight, and perfect for high-traffic environments (data pooling) without putting any stress on your primary database (e.g., MySQL).
 
+## Laravel Compatibility
+
+This package is designed to support modern Laravel ecosystems and supports the following framework versions:
+
+| Laravel Version  | PHP Version | Status    |
+| :--------------- | :---------- | :-------- |
+| **Laravel 10.x** | `^8.2`      | Supported |
+| **Laravel 11.x** | `^8.2`      | Supported |
+| **Laravel 12.x** | `^8.2`      | Supported |
+| **Laravel 13.x** | `^8.2`      | Supported |
+
 ## Features
 
 - **Zero Configuration:** Automatically injects and registers the internal SQLite connection into core Laravel.
