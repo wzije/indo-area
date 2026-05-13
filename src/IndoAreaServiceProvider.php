@@ -2,6 +2,7 @@
 
 namespace Wzije\IndoArea;
 
+use Closure;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,5 +21,10 @@ class IndoAreaServiceProvider extends ServiceProvider
                 'foreign_key_constraints' => true
             ]
         ]);
+    }
+
+    public function boot(Closure $callback)
+    {
+        $this->loadRoutesFrom(__DIR__ . '/routes.php');
     }
 }
