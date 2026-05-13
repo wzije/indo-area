@@ -1,0 +1,32 @@
+{
+    "name": "wzije/indo-area",
+    "version": "1.0.0",
+    "type": "library",
+    "description": "Library untuk mengambil data wilayah Indonesia",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Wzije\\IndoArea\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jehan Afwazi A",
+            "email": "jehan.labs@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/database": "^10.0|^11.0|^12.0|^13.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Wzije\\IndoArea\\IndoAreaServiceProvider"
+            ]
+        }
+    }
+}
