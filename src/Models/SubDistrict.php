@@ -10,7 +10,7 @@ class SubDistrict extends Model
 
     protected $connection = 'sqlite_indo_area';
 
-    protected $table = 'subsdistricts';
+    protected $table = 'sub_districts';
 
     public function city()
     {
