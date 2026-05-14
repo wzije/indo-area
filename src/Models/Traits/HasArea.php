@@ -57,7 +57,6 @@ trait HasArea
             // Dynamically fetch values using the mapped column names
 
             $parts = array_filter([
-                $addressLine,
                 $this->village?->name ? 'Kel. ' . $this->village->name : null,
                 $this->subDistrict?->name ? 'Kec. ' . $this->subDistrict->name : null,
                 $this->city?->name,
