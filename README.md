@@ -1,243 +1,261 @@
 # IndoArea - Laravel Indonesia Regional Data Library
 
-IndoArea is a self-contained Laravel package providing comprehensive Indonesian regional administrative data (BPS standard). It utilizes an internal offline SQLite database, making it exceptionally fast, lightweight, and perfect for high-traffic environments (data pooling) without putting any stress on your primary database (e.g., MySQL).
+IndoArea is a self-contained Laravel package providing comprehensive Indonesian regional administrative data (BPS standard). It utilizes an internal offline SQLite database, making it exceptionally fast, lightweight, and perfect for high-traffic environments without putting any stress on your primary database (e.g., MySQL).
 
 ## Laravel Compatibility
-
-This package is designed to support modern Laravel ecosystems and supports the following framework versions:
 
 | Laravel Version  | PHP Version | Status    |
 | :--------------- | :---------- | :-------- |
 | **Laravel 10.x** | `^8.3`      | Supported |
 | **Laravel 11.x** | `^8.3`      | Supported |
 | **Laravel 12.x** | `^8.3`      | Supported |
-| **Laravel 13.x** | `^8.3`      | Supported |
+| **Laravel 12.x** | `^8.3`      | Supported |
 
 ## Features
 
-- **Zero Configuration:** Automatically injects and registers the internal SQLite connection into core Laravel.
-- **No Database Migration Needed:** Zero impact on your main application database. No messy imports of 80,000+ village rows into your production tables.
-- **BPS Standard Code:** Uses pure numeric regional identification codes without dots (e.g., `3273` for Bandung City).
-- **Built-in API Endpoints:** Ships with pre-configured routes for seamless asynchronous chaining dropdown selectors.
+- **Zero Configuration:** Automatically injects and registers the internal SQLite connection.
+- **No Database Migration Needed:** No messy imports of 80,000+ village rows into your production tables.
+- **BPS Standard Code:** Uses pure numeric regional identification codes without dots.
+- **HasArea Trait:** Easily link your models to regional data with built-in relationships and full address formatting.
 
 ## Installation
-
-You can easily install this package into any Laravel project via Composer:
 
 ```bash
 composer require wzije/indo-area
 ```
 
+---
+
 ## Available API Endpoints
 
 The library automatically registers the following REST API routes under the `api/indo-area` prefix:
 
-| Method  | Endpoint                                      | Description                      | JSON Response Keys                       |
-| :------ | :-------------------------------------------- | :------------------------------- | :--------------------------------------- |
-| **GET** | `/api/indo-area/provinces`                    | Get all provinces                | `province_code`, `province_name`         |
-| **GET** | `/api/indo-area/provinces/{code}/cities`      | Get cities by province code      | `city_code`, `city_name`                 |
-| **GET** | `/api/indo-area/cities/{code}/subdistricts`   | Get subdistricts by city code    | `sub_district_code`, `sub_district_name` |
-| **GET** | `/api/indo-area/subdistricts/{code}/villages` | Get villages by subdistrict code | `village_code`, `village_name`           |
+| Method  | Endpoint                                    | Description                    | JSON Response Keys |
+| ------- | ------------------------------------------- | ------------------------------ | ------------------ |
+| **GET** | `/api/indo-area/provinces`                  | Get all provinces              | `id`, `name`       |
+| **GET** | `/api/indo-area/provinces/{code}/regencies` | Get regencies by province code | `id`, `name`       |
+| **GET** | `/api/indo-area/regencies/{code}/districts` | Get districts by regency code  | `id`, `name`       |
+| **GET** | `/api/indo-area/districts/{code}/villages`  | Get villages by district code  | `id`, `name`       |
 
 ---
 
 ## Usage Guide
 
-### Backend Eloquent Model Queries
+### 1. Linking Your Models (HasArea Trait)
 
-You can instantly use the Eloquent models bundled with this package. The models are pre-configured to query the internal SQLite file out-of-the-box.
+You can use the `HasArea` trait in your models (e.g., `User` or `Address`) to instantly gain relationships to the regional data.
 
-#### 1. Fetch All Provinces
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Wzije\IndoArea\Models\Traits\HasArea;
+
+class Address extends Model
+{
+    use HasArea;
+
+    /**
+     * Optional: Map your custom column names if they differ from defaults
+     * Defaults: province, regency, district, village
+     */
+    public function areaColumnMap(): array
+    {
+        return [
+            'province' => 'province_id',
+            'regency'  => 'city_id',
+            'district' => 'district_id',
+            'village'  => 'village_id',
+        ];
+    }
+}
+
+```
+
+**Benefits of HasArea:**
+
+- **Relationships:** Access via `$model->province`, `$model->city`, `$model->subDistrict`, and `$model->village`.
+- **Full Address:** Get a formatted string via `$model->full_address`.
+
+---
+
+### 2. Backend Eloquent Model Queries
+
+#### Fetch All Provinces
 
 ```php
 use Wzije\IndoArea\Models\Province;
 
 $provinces = Province::all();
+
 ```
 
-#### 2. Fetch Cities Belonging to a Province
+#### Fetch Regencies Belonging to a Province
 
 ```php
 use Wzije\IndoArea\Models\Province;
 
-province = Province::find(provinceId);
-cities = province->cities;
-```
+$province = Province::find($provinceId);
+$regencies = $province->regencies;
 
-#### 3. Fetch Subdistricts and Chained Relationships
-
-```php
-use Wzije\IndoArea\Models\City;
-
-city = City::find(cityId);
-
-// Retrieve all subdistricts under this city along with their respective villages
-subdistricts =city->subdistricts()->with('villages')->get();
 ```
 
 ---
 
-## Frontend Integration (Chained Cascading Dropdowns)
+### 3. Frontend Integration (Chained Dropdowns)
 
-Here is a complete vanilla JavaScript example to implement dynamic, reactive select dropdown elements inside your views using the package endpoints:
-
-### 1. HTML Select Inputs Structure
+#### HTML Structure
 
 ```html
 <select
   id="region-province"
-  data-selected="{{ old('province', \$currentProvince) }}"
+  data-selected="{{ old('province', $user->province_id) }}"
 >
   <option value="">Select Province</option>
 </select>
 
 <select
-  id="region-city"
-  data-selected="{{ old('city', \$currentCity) }}"
+  id="region-regency"
+  data-selected="{{ old('regency', $user->regency_id) }}"
   disabled
 >
-  <option value="">Select City</option>
+  <option value="">Select Regency</option>
 </select>
 
 <select
-  id="region-subdistrict"
-  data-selected="{{ old('sub_district', \$currentSubDistrict) }}"
+  id="region-district"
+  data-selected="{{ old('district', $user->district_id) }}"
   disabled
 >
-  <option value="">Select Subdistrict</option>
+  <option value="">Select District</option>
 </select>
 
 <select
   id="region-village"
-  data-selected="{{ old('village', \$currentVillage) }}"
+  data-selected="{{ old('village', $user->village_id) }}"
   disabled
 >
   <option value="">Select Village</option>
 </select>
 ```
 
-### 2. Cascading Script
-
-Add this script directly to your view template or global asset stack:
+#### JavaScript Logic
 
 ```javascript
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const provinceSelect = document.getElementById('region-province');
-        const citySelect = document.getElementById('region-city');
-        const subdistrictSelect = document.getElementById('region-subdistrict');
-        const villageSelect = document.getElementById('region-village');
+document.addEventListener("DOMContentLoaded", function () {
+  const provinceSelect = document.getElementById("region-province");
+  const regencySelect = document.getElementById("region-regency");
+  const districtSelect = document.getElementById("region-district");
+  const villageSelect = document.getElementById("region-village");
 
-        // Execute initial data pull on page load
-        if (provinceSelect) {
-            loadProvinces();
+  if (provinceSelect) loadProvinces();
+
+  function loadProvinces() {
+    fetch("/api/indo-area/provinces")
+      .then((res) => res.json())
+      .then((data) => {
+        populateSelect(provinceSelect, data, "id", "name");
+        if (provinceSelect.dataset.selected) {
+          provinceSelect.value = provinceSelect.dataset.selected;
+          loadRegencies(provinceSelect.value);
         }
+      });
 
-        function loadProvinces() {
-            fetch('/api/indo-area/provinces')
-                .then(res => res.json())
-                .then(data => {
-                    populateSelect(provinceSelect, data, 'province_code', 'province_name');
-                    if (provinceSelect.dataset.selected) {
-                        provinceSelect.value = provinceSelect.dataset.selected;
-                        loadCities(provinceSelect.value);
-                    }
-                }).catch(err => console.error('Error fetching provinces:', err));
-
-            provinceSelect.addEventListener('change', function () {
-                resetSelect(citySelect, 'Select City');
-                resetSelect(subdistrictSelect, 'Select Subdistrict');
-                resetSelect(villageSelect, 'Select Village');
-                if (this.value) loadCities(this.value);
-            });
-        }
-
-        function loadCities(provinceCode) {
-            citySelect.disabled = false;
-            citySelect.classList.remove('bg-gray-50');
-            fetch(`/api/indo-area/provinces/${provinceCode}/cities`)
-                .then(res => res.json())
-                .then(data => {
-                    populateSelect(citySelect, data, 'city_code', 'city_name');
-                    if (citySelect.dataset.selected) {
-                        citySelect.value = citySelect.dataset.selected;
-                        citySelect.dataset.selected = ''; // Clear after initial restore
-                        loadSubdistricts(citySelect.value);
-                    }
-                });
-
-            citySelect.addEventListener('change', function () {
-                resetSelect(subdistrictSelect, 'Select Subdistrict');
-                resetSelect(villageSelect, 'Select Village');
-                if (this.value) loadSubdistricts(this.value);
-            });
-        }
-
-        function loadSubdistricts(cityCode) {
-            subdistrictSelect.disabled = false;
-            subdistrictSelect.classList.remove('bg-gray-50');
-            fetch(`/api/indo-area/cities/${cityCode}/subdistricts`)
-                .then(res => res.json())
-                .then(data => {
-                    populateSelect(subdistrictSelect, data, 'sub_district_code', 'sub_district_name');
-                    if (subdistrictSelect.dataset.selected) {
-                        subdistrictSelect.value = subdistrictSelect.dataset.selected;
-                        subdistrictSelect.dataset.selected = '';
-                        loadVillages(subdistrictSelect.value);
-                    }
-                });
-
-            subdistrictSelect.addEventListener('change', function () {
-                resetSelect(villageSelect, 'Select Village');
-                if (this.value) loadVillages(this.value);
-            });
-        }
-
-        function loadVillages(subdistrictCode) {
-            if (!villageSelect) return;
-            villageSelect.disabled = false;
-            villageSelect.classList.remove('bg-gray-50');
-            fetch(`/api/indo-area/subdistricts/${subdistrictCode}/villages`)
-                .then(res => res.json())
-                .then(data => {
-                    populateSelect(villageSelect, data, 'village_code', 'village_name');
-                    if (villageSelect.dataset.selected) {
-                        villageSelect.value = villageSelect.dataset.selected;
-                        villageSelect.dataset.selected = '';
-                    }
-                });
-        }
-
-        function populateSelect(element, data, codeField, nameField) {
-            element.innerHTML = `<option value="">${element.options[0].text}</option>`;
-            data.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item[codeField];
-                option.textContent = item[nameField];
-                element.appendChild(option);
-            });
-        }
-
-        function resetSelect(element, placeholder) {
-            if (!element) return;
-            element.innerHTML = `<option value="">${placeholder}</option>`;
-            element.disabled = true;
-            element.classList.add('bg-gray-50');
-        }
+    provinceSelect.addEventListener("change", function () {
+      resetSelect(regencySelect, "Select Regency");
+      resetSelect(districtSelect, "Select District");
+      resetSelect(villageSelect, "Select Village");
+      if (this.value) loadRegencies(this.value);
     });
-</script>
+  }
+
+  function loadRegencies(provinceCode) {
+    enableSelect(regencySelect);
+    fetch(`/api/indo-area/provinces/${provinceCode}/regencies`)
+      .then((res) => res.json())
+      .then((data) => {
+        populateSelect(regencySelect, data, "id", "name");
+        if (regencySelect.dataset.selected) {
+          regencySelect.value = regencySelect.dataset.selected;
+          regencySelect.dataset.selected = "";
+          loadDistricts(regencySelect.value);
+        }
+      });
+
+    regencySelect.addEventListener("change", function () {
+      resetSelect(districtSelect, "Select District");
+      resetSelect(villageSelect, "Select Village");
+      if (this.value) loadDistricts(this.value);
+    });
+  }
+
+  function loadDistricts(regencyCode) {
+    enableSelect(districtSelect);
+    fetch(`/api/indo-area/regencies/${regencyCode}/districts`)
+      .then((res) => res.json())
+      .then((data) => {
+        populateSelect(districtSelect, data, "id", "name");
+        if (districtSelect.dataset.selected) {
+          districtSelect.value = districtSelect.dataset.selected;
+          districtSelect.dataset.selected = "";
+          loadVillages(districtSelect.value);
+        }
+      });
+
+    districtSelect.addEventListener("change", function () {
+      resetSelect(villageSelect, "Select Village");
+      if (this.value) loadVillages(this.value);
+    });
+  }
+
+  function loadVillages(districtCode) {
+    if (!villageSelect) return;
+    enableSelect(villageSelect);
+    fetch(`/api/indo-area/districts/${districtCode}/villages`)
+      .then((res) => res.json())
+      .then((data) => {
+        populateSelect(villageSelect, data, "id", "name");
+        if (villageSelect.dataset.selected) {
+          villageSelect.value = villageSelect.dataset.selected;
+          villageSelect.dataset.selected = "";
+        }
+      });
+  }
+
+  function populateSelect(element, data, codeField, nameField) {
+    const placeholder = element.options[0].text;
+    element.innerHTML = `<option value="">${placeholder}</option>`;
+    data.forEach((item) => {
+      const option = document.createElement("option");
+      option.value = item[codeField];
+      option.textContent = item[nameField];
+      element.appendChild(option);
+    });
+  }
+
+  function enableSelect(element) {
+    element.disabled = false;
+    element.classList.remove("bg-gray-50");
+  }
+
+  function resetSelect(element, placeholder) {
+    if (!element) return;
+    element.innerHTML = `<option value="">${placeholder}</option>`;
+    element.disabled = true;
+    element.classList.add("bg-gray-50");
+  }
+});
 ```
 
 ---
 
 ## Available Models
 
-- `Wzije\IndoArea\Models\Country`
 - `Wzije\IndoArea\Models\Province`
-- `Wzije\IndoArea\Models\City`
-- `Wzije\IndoArea\Models\SubDistrict`
+- `Wzije\IndoArea\Models\Regency`
+- `Wzije\IndoArea\Models\District`
 - `Wzije\IndoArea\Models\Village`
 
 ## License
 
-This library is open-sourced software licensed under the [MIT license](LICENSE).
+This library is open-sourced software licensed under the [MIT license](https://www.google.com/search?q=LICENSE).

@@ -12,7 +12,7 @@ class IndoAreaServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $databasePath = __DIR__ . '/../database/records.sqlite';
+        $databasePath = __DIR__ . '/../database/dataset.sqlite';
         Config::set([
             'database.connections.sqlite_indo_area' => [
                 'driver' => 'sqlite',
